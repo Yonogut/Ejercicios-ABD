@@ -226,7 +226,7 @@ plot(x, cdf_aproximada, type = "l", col = "red", lwd = 2,
 x <- seq(-4, 4, 1e-3)
 densidad <- dnorm(x)
 valor_esperado <- sum(x*densidad)*1e-3
-print(valor_esperado)
+cat("El valor esperado es", valor_esperado, "\n")
 ```
 
 :::
@@ -247,7 +247,7 @@ x <- seq(0, 1, 1e-3)
 y <- dbeta(x, shape1 = 1, shape2 = 1)
 plot(x, y, type = "l", col = "blue", lwd = 2,
      main = "Distribución Beta(1, 1)",
-     xlab = "x", ylab = "Densidad")
+     xlab = "x", ylab = "Densidad", ylim=c(0,1.1) )
 ```
 
 :::
@@ -372,7 +372,7 @@ theta <- seq(0, 1, 1e-3)
 densidad_prior <- dbeta(theta, shape1 = 1, shape2 = 1)
 plot(theta, densidad_prior, type = "l", col = "blue", lwd = 2,
      main = "Distribución previa Beta(1, 1)",
-     xlab = "Tasa de aceptación (theta)", ylab = "Densidad")
+     xlab = "Tasa de aceptación (theta)", ylab = "Densidad",ylim=c(0,1.1))
 
 ```
 
@@ -631,8 +631,9 @@ varianza_previa <-1156
 varianza_v <- varianza_muestral
 sigma <- (varianza_previa * varianza_v)/(varianza_previa*n + varianza_v) 
 mu <- (varianza_v * media_previa + varianza_previa*n*media_muestral)/(varianza_v + varianza_previa*n) 
-cat("Distribución posterior: Normal(", round(mu, 2), ",", round(sigma, 2), ")\n")
+cat("Distribución posterior: Normal(", round(mu, 2), ",", round(sqrt(sigma), 2), ")\n")
 ```
+
 Para el codigo utlice las siguientes formulas:
 
 $$
@@ -650,22 +651,42 @@ $$
 
 ::: {#respuesta-23 .callout-note}
 ```{r preg 23.1}
+n_muestra <- 51 
+media_previa <- 247  
+varianza_previa <- 1156  
+set.seed(123)
+n_samples <- 100000
+theta_samples <- rnorm(n_samples, mean = media_previa, sd = sqrt(varianza_previa / n_muestra)) 
+
+weights <- dnorm(media_muestral, mean = theta_samples, sd = sqrt(varianza_muestral / n_muestra))  
+
+weights <- weights / sum(weights)
+
+expected_value_mc <- sum(theta_samples * weights)
+expected_value_squared_mc <- sum((theta_samples^2) * weights)
+variance_posterior_mc <- expected_value_squared_mc - expected_value_mc^2
+
+sd_posterior_mc <- sqrt(variance_posterior_mc)
+
+cat("Estimador esperado :", round(expected_value_mc, 2), "\n")
+cat("Desviación estándar posterior:",round(sd_posterior_mc, 2))
+
+```
+```{r preg 23.2}
 n <- 51
 media_previa <-247
 varianza_previa <-1156
 varianza_v <- varianza_muestral
-sigma <- (varianza_previa * varianza_v)/(varianza_previa*n + varianza_v) 
-mu <- (varianza_v * media_previa + varianza_previa*n*media_muestral)/(varianza_v + varianza_previa*n)
-x <- seq(media_previa - 4 * sqrt(varianza_previa), media_previa + 4 * sqrt(varianza_previa), length.out = 1000)
+x <- seq(media_previa - 4 * sqrt(varianza_previa), media_previa + 4 * sqrt(varianza_previa), by= PREC)
 densidad_previa <- dnorm(x, mean = media_previa, sd = sqrt(varianza_previa))
-densidad_posterior <- dnorm(x, mean = mu, sd = sqrt(sigma))
+densidad_posterior <- dnorm(x, mean = expected_value_mc, sd =sd_posterior_mc)
 plot(x, densidad_previa, type = "l", col = "blue", lwd = 2, 
-     ylab = "Densidad", xlab = "Media",ylim = c(0,0.07), main = "Distribuciones Previa y Posterior")
+     ylab = "Densidad", xlab = "Media",ylim = c(0,0.12), main = "Distribuciones Previa y Posterior")
 lines(x, densidad_posterior, col = "red", lwd = 2)
 par(xpd = TRUE)
 legend("bottomleft",inset = c(-0.15,- 0.45), cex = 0.7, legend = c("Distribución Previa (Normal(247, 1156))", 
                               "Distribución Posterior (Normal(228.4, 36.12))"),
        col = c("blue", "red"), lwd = 2, bty = "n")
 ```
-La solución analítica y gráfica son consistentes, ya que el modo (pico en la gráfica) de la distribución posterior coincide con la media posterior calculada analíticamente (228.4), y la varianza posterior es idéntica en ambos métodos. Esto demuestra que ambos enfoques reflejan adecuadamente la misma información.
+La diferencia entre ambos métodos se debe a cómo calculan la distribución posterior. El método analítico usa la actualización bayesiana exacta, mientras que el método de integracion numerica estima la media y varianza a partir de muestras ponderadas. La discrepancia en los valores (224.4 vs. 239.75 para la media y 6.01 vs. 3.75 para la desviación estándar) sugiere que el metodo de integracion numerica puede estar subestimando la varianza, posiblemente debido a una mala normalización de pesos o una baja superposición entre la previa y la verosimilitud.
 :::

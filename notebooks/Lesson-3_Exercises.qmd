@@ -679,7 +679,8 @@ legend("bottomleft",inset = c(-0.15,- 0.45), cex = 0.7, legend = c("Distribució
 ```{r preg-23-corregida.2}
 densidad_final <- dnorm(x,media_muestral,sqrt(varianza_muestral))
 valor_esperado_nuevo <- sum(x*densidad_final)*PREC
-cat("El valor esperado es", valor_esperado_nuevo)
+moda_nueva <- x[which.max(densidad_final)]
+cat("El valor esperado es", valor_esperado_nuevo, "y la moda es", moda_nueva)
 ```
 El método analítico usa una fórmula exacta, mientras que la integración numérica hace una aproximación sumando muchos valores pequeños. Como la integración numérica no es perfecta, puede haber un pequeño error. En este caso, el método analítico es más preciso.
 :::

@@ -163,10 +163,10 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   ¿Cuál es el valor máximo de la función de densidad?
 
 ::: {#respuesta-1 .callout-note}
-```{r valor maximo de la funcion de densidad normal}
+```{r max-normall}
 dnorm(0) # valor maximo para la distibucion normal
 ```
-```{r alor maximo de la funcion de densidad uniforme}
+```{r max-uniforme}
 dunif(0.5, min = 0, max = 1) # valor maximo para la distibucion uniforme
 ```
 
@@ -188,10 +188,10 @@ el punto puede ser considerado la media, mediana o moda ya que coinciden.
 
 ::: {#respuesta-3 .callout-note}
 Si, puede superar el valor 1, ya que mide la densidad de la probabilidad, no la probabilidad, lo importante es que area bajo l curva sea 1. Cuando el rango sea muy pequeño (en el caso de las uniformes por ejemplo ya que se concentran en una zona menor) o lo sea su desviación estandar (en el caso de la normal) el valor maximo de la funcion de densidad puede ser superior a 1
-```{r valor orientativo norm}
+```{r valor-normal}
 dnorm(0,0,0.1)
 ```
-```{r valor orientativo uniform}
+```{r valor-uniforme}
 dunif(0.25, min = 0, max = 0.5)
 ```
 
@@ -204,10 +204,10 @@ dunif(0.25, min = 0, max = 0.5)
 *(Ejecuta `?cumsum` para consultar la ayuda de esa función).*
 
 ::: {#respuesta-4 .callout-note}
-```{r prueba}
-x <- seq(-4, 4, 1e-3)
+```{r distribucion-normal}
+x <- seq(-4, 4, PREC)
 densidad <- dnorm(x)
-cdf_aproximada <- cumsum(densidad) * 1e-3
+cdf_aproximada <- cumsum(densidad) * PREC
 plot(x, cdf_aproximada, type = "l", col = "red", lwd = 2,
      main = "CDF aproximada",
      xlab = "x", ylab = "CDF")
@@ -222,7 +222,7 @@ plot(x, cdf_aproximada, type = "l", col = "red", lwd = 2,
 -   Calcula el valor esperado de la distribución normal.
 
 ::: {#respuesta-5 .callout-note}
-```{r valor esperado}
+```{r valor-esperado}
 x <- seq(-4, 4, 1e-3)
 densidad <- dnorm(x)
 valor_esperado <- sum(x*densidad)*1e-3
@@ -242,7 +242,7 @@ cat("El valor esperado es", valor_esperado, "\n")
 *(Si no sabes qué limites utilizar, consulta la ayuda de `dbeta()`).*
 
 ::: {#respuesta-6 .callout-note}
-```{r dist beta}
+```{r dist-beta}
 x <- seq(0, 1, 1e-3)
 y <- dbeta(x, shape1 = 1, shape2 = 1)
 plot(x, y, type = "l", col = "blue", lwd = 2,
@@ -267,39 +267,39 @@ La distribución Beta(1,1) tiene una forma uniforme en el intervalo [0,1]. Esto 
 -   Prueba con diferentes valores de $\alpha$ y $\beta$.
 
 ::: {#respuesta-8 .callout-note}
-```{r prueba 1 distribucion beta}
+```{r preg-8.1}
 x <- seq(0, 1, 1e-3)
 y <- dbeta(x, shape1 = 2, shape2 = 1.5)
 plot(x, y, type = "l", col = "blue", lwd = 2,
-     main = "Distribución Beta(1, 1)",
+     main = "Distribución Beta(2, 1.5)",
      xlab = "x", ylab = "Densidad")
 ```
-```{r prueba 2 distribucion beta}
+```{r preg-8.2}
 x <- seq(0, 1, 1e-3)
 y <- dbeta(x, shape1 = 2, shape2 = 2)
 plot(x, y, type = "l", col = "blue", lwd = 2,
-     main = "Distribución Beta(1, 1)",
+     main = "Distribución Beta(2, 2)",
      xlab = "x", ylab = "Densidad")
 ```
-```{r prueba 3 distribucion beta}
+```{r preg-8.3}
 x <- seq(0, 1, 1e-3)
 y <- dbeta(x, shape1 = 5, shape2 = 5)
 plot(x, y, type = "l", col = "blue", lwd = 2,
-     main = "Distribución Beta(1, 1)",
+     main = "Distribución Beta(5, 5)",
      xlab = "x", ylab = "Densidad")
 ```
-```{r prueba 4 distribucion beta}
+```{r preg-8.4}
 x <- seq(0, 1, 1e-3)
 y <- dbeta(x, shape1 = 1.2, shape2 = 1.2)
 plot(x, y, type = "l", col = "blue", lwd = 2,
-     main = "Distribución Beta(1, 1)",
+     main = "Distribución Beta(1.2, 1.2)",
      xlab = "x", ylab = "Densidad")
 ```
-```{r prueba 5 distribucion beta}
+```{r preg-8.5}
 x <- seq(0, 1, 1e-3)
 y <- dbeta(x, shape1 = 0.8, shape2 = 0.8)
 plot(x, y, type = "l", col = "blue", lwd = 2,
-     main = "Distribución Beta(1, 1)",
+     main = "Distribución Beta(0.8, 0.8)",
      xlab = "x", ylab = "Densidad")
 ```
 :::
@@ -364,10 +364,12 @@ La tasa de aceptación en el modelo beta-binomial se representa mediante el par�
 ::: {#respuesta-14 .callout-note}
 Para un modelo beta-binomial "no informativo", como se menciona en el problema, la distribución previa que utilizaríamos es una distribución Beta(1, 1).
 $$
-(y|\theta) \sim Binomial (n,\theta) \newline
+(y|\theta) \sim Binomial (n,\theta)
+$$
+$$
 \theta \sim Beta (\alpha, \beta)
 $$
-```{r respresent grafica theta}
+```{r preg-14}
 theta <- seq(0, 1, 1e-3)
 densidad_prior <- dbeta(theta, shape1 = 1, shape2 = 1)
 plot(theta, densidad_prior, type = "l", col = "blue", lwd = 2,
@@ -413,10 +415,12 @@ print(frecuencias)
 Como en este caso hay 17 "SI" entonces y = 17; alpha priori = 1, beta priori = 1 
 $$
 \theta|y \sim Beta (\alpha + y, \beta +n - y)\newline
+$$
+$$
 \theta|y \sim Beta (18, 6)
 $$
-```{r preg 16}
-theta <- seq(0, 1, 1e-3)
+```{r preg-16}
+theta <- seq(0, 1, PREC)
 densidad_prior <- dbeta(theta, shape1 = 1, shape2 = 1)
 densidad_posterior <- dbeta(theta, shape1 = 18, shape2 = 6)
 plot(theta, densidad_prior, type = "l", col = "blue", lwd = 2,
@@ -441,9 +445,11 @@ legend("bottomleft",inset = c(-0.1,- 0.5), cex = 0.7,legend = c("Distribución P
 ::: {#respuesta-17 .callout-note}
 $$
 Media ->E[\theta]= \alpha\div(\alpha +\beta) \newline
+$$
+$$
 Moda=  (\alpha-1)\div(\alpha +\beta - 2)
 $$
-```{r preg 17}
+```{r preg-17}
 cat("La media es", 18 / (18 + 6), "\n")
 cat("La moda es", (18 - 1) / (18 + 6 - 2), "\n")
 
@@ -484,7 +490,9 @@ print(frecuencias)
 Dado que ya tenemos una muestra inicial, la distribución previa para esta nueva ocasión será la distribución posterior obtenida de la primera muestra. Es decir, usamos la distribución posterior de la primera muestra como nueva distribución previa.
 
 $$
-\theta \sim Beta (\alpha, \beta) \newline
+\theta \sim Beta (\alpha, \beta)
+$$
+$$
 \theta \sim Beta (18,6)
 $$
 :::
@@ -496,21 +504,25 @@ $$
 ::: {#respuesta-19 .callout-note}
 Siendo y= 65 y n=113
 $$
-\theta|y \sim Beta (\alpha + y, \beta +n - y)\newline
+\theta|y \sim Beta (\alpha + y, \beta +n - y)
+$$
+$$
 \theta|y \sim Beta (83, 54)
 $$
-```{r preg 19}
+```{r preg-19}
 theta <- seq(0, 1, 1e-3)
-densidad_prior <- dbeta(theta, shape1 = 18, shape2 = 6)
+densidad_prior_1 <- dbeta(theta, shape1 = 1, shape2 = 1)
+densidad_prior_2 <- dbeta(theta, shape1 = 18, shape2 = 6)
 densidad_posterior <- dbeta(theta, shape1 = 83, shape2 = 54)
-plot(theta, densidad_prior, type = "l", col = "blue", lwd = 2,
+plot(theta, densidad_prior_2, type = "l", col = "blue", lwd = 2,
      main = "Distribución Previa y Posterior",
      xlab = expression(theta), ylab = "Densidad", ylim = c(0,10))
 lines(theta, densidad_posterior, col = "red", lwd = 2)
+lines(theta, densidad_prior_1, col = "green", lwd = 2)
 par(xpd = TRUE)
-legend("bottomleft",inset = c(-0.1,- 0.5), cex = 0.7,legend = c("Distribución Previa (Beta(18,6))", 
+legend("bottomleft",inset = c(-0.1,- 0.5), cex = 0.6,legend = c("Distribución Previa 1 (Beta(1,1))","Distribución Previa 2 (Beta(18,6))", 
                               "Distribución Posterior (Beta(83,54))"),
-       col = c("blue", "red"), lwd = 2)
+       col = c("green","blue", "red"), lwd = 2)
 
 cat("La media es", 83 / (83 + 54), "\n")
 cat("La moda es", (83 - 1) / (83+54 - 2), "\n")
@@ -542,7 +554,7 @@ $$
 \theta|y \sim Beta (\alpha + y, \beta +n - y)\newline
 \theta|y \sim Beta (83, 54)
 $$
-```{r preg 20}
+```{r preg-20}
 theta <- seq(0, 1, 1e-3)
 densidad_prior <- dbeta(theta, shape1 = 18, shape2 = 6)
 densidad_posterior <- dbeta(theta, shape1 = 83, shape2 = 54)
@@ -624,21 +636,24 @@ Media clase 2: 220.8333
 Media muestral: 227.8039 
 Varianza muestral: 1901.441 
 
-```{r preg 22}
-n <- 51
+```{r preg-22}
+n <- datos_totales |> nrow()
 media_previa <-247
 varianza_previa <-1156
-varianza_v <- varianza_muestral
-sigma <- (varianza_previa * varianza_v)/(varianza_previa*n + varianza_v) 
-mu <- (varianza_v * media_previa + varianza_previa*n*media_muestral)/(varianza_v + varianza_previa*n) 
+sigma <- (varianza_previa * varianza_muestral)/(varianza_previa*n + varianza_muestral) 
+mu <- (varianza_muestral * media_previa + varianza_previa*n*media_muestral)/(varianza_muestral + varianza_previa*n) 
 cat("Distribución posterior: Normal(", round(mu, 2), ",", round(sqrt(sigma), 2), ")\n")
 ```
 
 Para el codigo utlice las siguientes formulas:
 
 $$
-\mu|y \sim N(\mu,\sigma^2) \newline
-\sigma_n^2=\frac{\sigma^2\cdot\sigma_0^2}{\sigma^2+n \cdot\sigma_0^2} \newline
+\mu|y \sim N(\mu,\sigma^2)
+$$
+$$
+\sigma_n^2=\frac{\sigma^2\cdot\sigma_0^2}{\sigma^2+n \cdot\sigma_0^2}
+$$
+$$
 \mu_n=\frac{\sigma^2\cdot\mu_0+n\cdot\sigma_0^2\cdot \bar{y}}{\sigma^2+n \cdot\sigma_0^2}
 $$
 :::
@@ -650,43 +665,21 @@ $$
 -   Representa las distribuciones previa y posterior de la media; considera un eje que cubra 4 desviaciones típicas a cada lado de la media de la distribución previa. Obten el estimador esperado y modal a partir de esta distribución y compáralos con la solución analítica de la pregunta anterior.
 
 ::: {#respuesta-23 .callout-note}
-```{r preg 23.1}
-n_muestra <- 51 
-media_previa <- 247  
-varianza_previa <- 1156  
-set.seed(123)
-n_samples <- 100000
-theta_samples <- rnorm(n_samples, mean = media_previa, sd = sqrt(varianza_previa / n_muestra)) 
 
-weights <- dnorm(media_muestral, mean = theta_samples, sd = sqrt(varianza_muestral / n_muestra))  
-
-weights <- weights / sum(weights)
-
-expected_value_mc <- sum(theta_samples * weights)
-expected_value_squared_mc <- sum((theta_samples^2) * weights)
-variance_posterior_mc <- expected_value_squared_mc - expected_value_mc^2
-
-sd_posterior_mc <- sqrt(variance_posterior_mc)
-
-cat("Estimador esperado :", round(expected_value_mc, 2), "\n")
-cat("Desviación estándar posterior:",round(sd_posterior_mc, 2))
-
-```
-```{r preg 23.2}
-n <- 51
-media_previa <-247
-varianza_previa <-1156
-varianza_v <- varianza_muestral
+```{r preg-23-corregida.1}
 x <- seq(media_previa - 4 * sqrt(varianza_previa), media_previa + 4 * sqrt(varianza_previa), by= PREC)
+densidad_post <- dnorm(x,mu,sqrt(sigma))
 densidad_previa <- dnorm(x, mean = media_previa, sd = sqrt(varianza_previa))
-densidad_posterior <- dnorm(x, mean = expected_value_mc, sd =sd_posterior_mc)
 plot(x, densidad_previa, type = "l", col = "blue", lwd = 2, 
-     ylab = "Densidad", xlab = "Media",ylim = c(0,0.12), main = "Distribuciones Previa y Posterior")
-lines(x, densidad_posterior, col = "red", lwd = 2)
+     ylab = "Densidad", xlab = "Media",ylim = c(0,0.07), main = "Distribuciones Previa y Posterior")
+lines(x, densidad_post, col = "red", lwd = 2)
 par(xpd = TRUE)
-legend("bottomleft",inset = c(-0.15,- 0.45), cex = 0.7, legend = c("Distribución Previa (Normal(247, 1156))", 
-                              "Distribución Posterior (Normal(228.4, 36.12))"),
-       col = c("blue", "red"), lwd = 2, bty = "n")
+legend("bottomleft",inset = c(-0.15,- 0.45), cex = 0.7, legend = c("Distribución Previa (Normal(247, 1156))", "Distribución Posterior (Normal(228.4, 36.12))"))
 ```
-La diferencia entre ambos métodos se debe a cómo calculan la distribución posterior. El método analítico usa la actualización bayesiana exacta, mientras que el método de integracion numerica estima la media y varianza a partir de muestras ponderadas. La discrepancia en los valores (224.4 vs. 239.75 para la media y 6.01 vs. 3.75 para la desviación estándar) sugiere que el metodo de integracion numerica puede estar subestimando la varianza, posiblemente debido a una mala normalización de pesos o una baja superposición entre la previa y la verosimilitud.
+```{r preg-23-corregida.2}
+densidad_final <- dnorm(x,media_muestral,sqrt(varianza_muestral))
+valor_esperado_nuevo <- sum(x*densidad_final)*PREC
+cat("El valor esperado es", valor_esperado_nuevo)
+```
+El método analítico usa una fórmula exacta, mientras que la integración numérica hace una aproximación sumando muchos valores pequeños. Como la integración numérica no es perfecta, puede haber un pequeño error. En este caso, el método analítico es más preciso.
 :::

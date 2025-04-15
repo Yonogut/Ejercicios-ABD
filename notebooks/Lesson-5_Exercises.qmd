@@ -82,7 +82,8 @@ SIGMA2_PREVIA <-  34^2
 
 Aplicando la propiedad de conjugación, recuerda que podemos obtener la expresión analítica de la distribución posterior de la media:
 
-$p(\mu | y) = N(\mu_{post}, \sigma^2_{post})$,
+$$p(\mu | y) = N(\mu_{post}, \sigma^2_{post})
+$$,
 
 siendo
 
@@ -103,6 +104,47 @@ $$
 -   Utilizando la expresión analítica del modelo, obtén la expresión analítica de la distribución posterior de la media para cada una de las dos clases, con 2 decimales.
 
 ::: {#respuesta-1 .callout-note}
+```{r preg-1}
+mu_pre    <- 247
+sigma2_pre <- 34^2
+
+# Cálculos para clase_1
+n_clase_1 <- length(clase_1$tiempo)
+y_bar_clase_1 <- mean(clase_1$tiempo)
+sigma2_y_clase_1 <- var(clase_1$tiempo)
+
+mu_post_clase_1 <- (sigma2_y_clase_1 * mu_pre + n_clase_1 * sigma2_pre * y_bar_clase_1) / 
+                   (sigma2_y_clase_1 + n_clase_1 * sigma2_pre)
+
+sigma2_post_clase_1 <- (sigma2_y_clase_1 * sigma2_pre) / 
+                       (sigma2_y_clase_1 + n_clase_1 * sigma2_pre)
+
+# Redondear resultados para clase_1
+mu_post_clase_1 <- round(mu_post_clase_1, 2)
+sigma2_post_clase_1 <- round(sigma2_post_clase_1, 2)
+
+# Cálculos para clase_2
+n_clase_2 <- length(clase_2$tiempo)
+y_bar_clase_2 <- mean(clase_2$tiempo)
+sigma2_y_clase_2 <- var(clase_2$tiempo)
+
+mu_post_clase_2 <- (sigma2_y_clase_2 * mu_pre + n_clase_2 * sigma2_pre * y_bar_clase_2) / 
+                   (sigma2_y_clase_2 + n_clase_2 * sigma2_pre)
+
+sigma2_post_clase_2 <- (sigma2_y_clase_2 * sigma2_pre) / 
+                       (sigma2_y_clase_2 + n_clase_2 * sigma2_pre)
+
+# Redondear resultados para clase_2
+mu_post_clase_2 <- round(mu_post_clase_2, 2)
+sigma2_post_clase_2 <- round(sigma2_post_clase_2, 2)
+
+# Mostrar resultados con frases
+cat("Para la clase 1, la media posterior es", mu_post_clase_1, 
+    "y la varianza posterior es", sigma2_post_clase_1, ".\n")
+cat("Para la clase 2, la media posterior es", mu_post_clase_2, 
+    "y la varianza posterior es", sigma2_post_clase_2, ".\n")
+
+```
 :::
 
 ## Simulación de Monte Carlo
@@ -121,6 +163,27 @@ set.seed(20250318)
 ```
 
 ::: {#respuesta-2 .callout-note}
+```{r preg-2}
+n_muestras <- 500
+muestras_clase_1 <- rnorm(
+  n_muestras, 
+  mean = mu_post_clase_1, 
+  sd = sqrt(sigma2_post_clase_1)
+)
+
+# Muestras para la clase 2
+muestras_clase_2 <- rnorm(
+  n_muestras, 
+  mean = mu_post_clase_2, 
+  sd = sqrt(sigma2_post_clase_2)
+)
+
+# Mostrar ejemplos de las primeras muestras
+cat("Primeras 5 muestras de clase 1:", head(muestras_clase_1, 5), "\n")
+cat("Primeras 5 muestras de clase 2:", head(muestras_clase_2, 5), "\n")
+
+```
+
 :::
 
 ## Inferencia con la media de la distribución posterior
@@ -130,6 +193,29 @@ set.seed(20250318)
 -   Con las distribuciones simuladas de la pregunta anterior, estima la media y la varianza de cada distribución. Compara los resultados con los obtenidos en la Pregunta 1.
 
 ::: {#respuesta-3 .callout-note}
+```{r preg-3}
+# Estimaciones Monte Carlo (media y varianza de las simulaciones)
+media_simulada_clase_1 <- mean(muestras_clase_1)
+varianza_simulada_clase_1 <- var(muestras_clase_1)
+
+media_simulada_clase_2 <- mean(muestras_clase_2)
+varianza_simulada_clase_2 <- var(muestras_clase_2)
+
+# Mostrar resultados
+cat("Clase 1:\n")
+cat("- Media posterior analítica: ", mu_post_clase_1, "\n")
+cat("- Media estimada: ", round(media_simulada_clase_1, 2), "\n")
+cat("- Varianza posterior analítica: ", sigma2_post_clase_1, "\n")
+cat("- Varianza estimada: ", round(varianza_simulada_clase_1, 2), "\n\n")
+
+cat("Clase 2:\n")
+cat("- Media posterior analítica: ", mu_post_clase_2, "\n")
+cat("- Media estimada: ", round(media_simulada_clase_2, 2), "\n")
+cat("- Varianza posterior analítica: ", sigma2_post_clase_2, "\n")
+cat("- Varianza estimada: ", round(varianza_simulada_clase_2, 2), "\n")
+
+```
+Las diferencias menores en la varianza y media pueden atribuirse a la naturaleza aleatoria de las simulaciones, pero la cercanía de los resultados analíticos y estimados respalda la validez del método.
 :::
 
 ## Tamaño muestral y error estándar de Monte Carlo
@@ -139,6 +225,36 @@ set.seed(20250318)
 -   Calcula el error estándar de Monte Carlo de las medias estimadas por el método de Monte Carlo [@hoff2009, p. 56], y su intervalo al 95% de confianza (p. 57). Asume que las varianzas verdaderas son desconocidas (i.e., utiliza las varianzas obtenidas por el método de Monte Carlo). ¿Cuál es la amplitud de los intervalos? Comprueba si los valores reales (obtenidos analíticamente) están comprendidos en los intervalos
 
 ::: {#respuesta-4 .callout-note}
+```{r preg-4}
+eemc_clase_1 <- sqrt(varianza_simulada_clase_1 / n_muestras)
+intervalo_clase_1 <- c(
+  media_simulada_clase_1 - 2 * eemc_clase_1,
+  media_simulada_clase_1 + 2 * eemc_clase_1
+)
+eemc_clase_2 <- sqrt(varianza_simulada_clase_2 / n_muestras)
+intervalo_clase_2 <- c(
+  media_simulada_clase_2 - 2 * eemc_clase_2,
+  media_simulada_clase_2 + 2 * eemc_clase_2
+)
+amplitud_clase_1 <- intervalo_clase_1[2] - intervalo_clase_1[1]
+amplitud_clase_2 <- intervalo_clase_2[2] - intervalo_clase_2[1]
+cat("Clase 1:\n")
+cat("Error estándar de Monte Carlo:", eemc_clase_1, "\n")
+cat("Intervalo de confianza al 95%:", intervalo_clase_1, "\n")
+cat("Amplitud del intervalo:", amplitud_clase_1, "\n\n")
+
+cat("Clase 2:\n")
+cat("Error estándar de Monte Carlo:", eemc_clase_2, "\n")
+cat("Intervalo de confianza al 95%:", intervalo_clase_2, "\n")
+cat("Amplitud del intervalo:", amplitud_clase_2, "\n\n")
+
+cat("¿La media analítica de la Clase 1 está en el intervalo?:", 
+    mu_post_clase_1 >= intervalo_clase_1[1] & mu_post_clase_1 <= intervalo_clase_1[2], "\n")
+cat("¿La media analítica de la Clase 2 está en el intervalo?:", 
+    mu_post_clase_2 >= intervalo_clase_2[1] & mu_post_clase_2 <= intervalo_clase_2[2], "\n")
+
+```
+
 :::
 
 ### Pregunta 5
@@ -146,6 +262,33 @@ set.seed(20250318)
 -   En base a las varianzas obtenidas por el método de Monte Carlo, determina el tamaño muestral de la distribución posterior necesario para alcanzar una precisión de 2 decimales en la estimación de la media de las distribuciones posteriores [@hoff2009, p. 56 ---vas a tener que "despejar" el tamaño de la muestra simulada]. Utiliza el valor mayor de ambas distribuciones para volver a calcular las medias, y comprueba si se alcanza la precisión esperada.
 
 ::: {#respuesta-5 .callout-note}
+```{r preg-5-part-1}
+var_max <- max(varianza_simulada_clase_1,varianza_simulada_clase_2)
+precision_deseada <- 0.005
+S_requerido <- ceiling(var_max / precision_deseada^2)
+cat("Varianza máxima estimada:", round(var_max, 4), "\n")
+cat("Tamaño muestral necesario para precisión de 2 decimales (MCSE < 0.005):", S_requerido, "\n")
+```
+```{r preg-5-part-2}
+muestras_nuevas_1 <- rnorm(S_requerido, mean = mu_post_clase_1, sd = sqrt(sigma2_post_clase_1))
+muestras_nuevas_2 <- rnorm(S_requerido, mean = mu_post_clase_2, sd = sqrt(sigma2_post_clase_2))
+
+media_nueva_1 <- mean(muestras_nuevas_1)
+mcse_nueva_1 <- sqrt(var(muestras_nuevas_1) / S_requerido)
+
+media_nueva_2 <- mean(muestras_nuevas_2)
+mcse_nueva_2 <- sqrt(var(muestras_nuevas_2) / S_requerido)
+
+# Mostrar resultados
+cat("Clase 1:\n")
+cat("- Media estimada:", round(media_nueva_1, 4), "\n")
+cat("- MCSE:", round(mcse_nueva_1, 5), "\n\n")
+
+cat("Clase 2:\n")
+cat("- Media estimada:", round(media_nueva_2, 4), "\n")
+cat("- MCSE:", round(mcse_nueva_2, 5), "\n")
+```
+
 :::
 
 ## Inferencia de intervalos y probabilidades
@@ -163,6 +306,42 @@ set.seed(20250318)
 Obtén los resultados analíticos con las funciones `qnorm()` y `pnorm()`, y compara ambos.
 
 ::: {#respuesta-6 .callout-note}
+```{r preg-6-1}
+IC99_clase_1 <- quantile(muestras_nuevas_1, c(0.005, 0.995))
+IC99_clase_2 <- quantile(muestras_nuevas_2, c(0.005, 0.995))
+
+cat("Intervalo de credibilidad al 99% para Clase 1:", IC99_clase_1, "\n")
+cat("Intervalo de credibilidad al 99% para Clase 2:", IC99_clase_2, "\n")
+```
+```{r preg-6-2}
+cuartiles_clase_1 <- quantile(muestras_nuevas_1, c(0.25, 0.5, 0.75))
+cuartiles_clase_2 <- quantile(muestras_nuevas_2, c(0.25, 0.5, 0.75))
+cat("Cuartiles para Clase 1:", cuartiles_clase_1, "\n")
+cat("Cuartiles para Clase 2:", cuartiles_clase_2, "\n")
+
+```
+```{r preg-6-3}
+prob_clase_1 <- mean(muestras_nuevas_1 < mu_pre)
+prob_clase_2 <- mean(muestras_nuevas_2 < mu_pre)
+
+cat("Probabilidad de que la media de Clase 1 sea menor a 247:", prob_clase_1, "\n")
+cat("Probabilidad de que la media de Clase 2 sea menor a 247:", prob_clase_2, "\n")
+
+```
+
+```{r preg-6-4}
+intervalo_analitico_clase_1 <- qnorm(c(0.005, 0.995), mean = media_nueva_1, sd = sqrt(var(muestras_nuevas_1)))
+intervalo_analitico_clase_2 <- qnorm(c(0.005, 0.995), mean = media_nueva_2, sd = sqrt(var(muestras_nuevas_2)))
+prob_analitica_clase_1 <- pnorm(247, mean = media_nueva_1, sd = sqrt(var(muestras_nuevas_1)))
+prob_analitica_clase_2 <- pnorm(247, mean = media_nueva_2, sd = sqrt(var(muestras_nuevas_2)))
+cat("Intervalo analítico al 99% para Clase 1:", intervalo_analitico_clase_1, "; resultado ques es igual al obtenido mediante el metodo previo:",IC99_clase_1,"\n\n")
+cat("Intervalo analítico al 99% para Clase 2:", intervalo_analitico_clase_2, "; resultado ques es igual al obtenido mediante el metodo previo:",IC99_clase_2,"\n\n")
+cat("Probabilidad analítica de que la media de Clase 1 sea menor a 247:", prob_analitica_clase_1,"; resultado ques es igual al obtenido mediante el metodo previo:",prob_clase_1, "\n\n")
+cat("Probabilidad analítica de que la media de Clase 2 sea menor a 247:", prob_analitica_clase_2,"; resultado ques es igual al obtenido mediante el metodo previo:",prob_clase_2, "\n")
+
+
+```
+
 :::
 
 ## Reflexión sobre el método de Monte Carlo
@@ -172,6 +351,8 @@ Obtén los resultados analíticos con las funciones `qnorm()` y `pnorm()`, y com
 -   ¿Qué opinas del método de Monte Carlo? ¿Te resulta fácil o difícil de aplicar? ¿Qué consideras que aporta respecto de obtener los parámetros de los modelos aplicando las fórmulas analíticas?
 
 ::: {#respuesta-7 .callout-note}
+Entiendo el funcionamiento de generar muestras con una determinada distribucion para analizarlas posteriormente, y eso hace mas sencillo realizar las operaciones posteriores al partir de una muestra, al menos a nivel de organizar lo que tienes que hacer con los datos.
+Considero que aporta flexibilidad con respecto a las formulas analiticas porque permitira evaluar diferentes situaciones o distribuciones que no tienen porque tener una formul analitica especifica.
 :::
 
 ## Inferencia con funciones derivadas
@@ -181,6 +362,21 @@ Obtén los resultados analíticos con las funciones `qnorm()` y `pnorm()`, y com
 -   Calcula la probabilidad de que la media de la segunda clase sea superior a la media de la primera clase usando el método de Monte Carlo. ¿Cómo lo harías usando la fórmula analítica? ¿Es más fácil o más difícil?
 
 ::: {#respuesta-8 .callout-note}
+```{r preg-8}
+# Probabilidad por simulación Monte Carlo
+prob_clase_2_1 <- mean(muestras_nuevas_2 > muestras_nuevas_1)
+
+# Probabilidad analítica 
+delta_mu <- media_nueva_2 - media_nueva_1
+suma_var <- var(muestras_nuevas_1) + var(muestras_nuevas_2)  
+
+prob_analitica_clase_2_1 <- 1 - pnorm(0, mean = delta_mu, sd = sqrt(suma_var))
+
+cat("Probabilidad de que la media de Clase 2 sea mayor que la de Clase 1 mediante el metodo Monte Carlo es:", round(prob_clase_2_1, 3), "\n")
+
+cat("Probabilidad de que la media de Clase 2 sea mayor que la de Clase 1 de forma analitica es:",round(prob_analitica_clase_2_1, 3), "\n")
+```
+El mas facil hacerlo mediante el metodo monte carlo, puesto que solo trabajas con muestras creadas, lo que hace mas sencillo trabajar con el programa
 :::
 
 ### Pregunta 9
@@ -188,6 +384,20 @@ Obtén los resultados analíticos con las funciones `qnorm()` y `pnorm()`, y com
 -   Las muestras obtenidas para distribución posterior de la media de cada una de las dos clases son independientes. Por lo tanto, debería dar igual en qué orden se hayan muestreado. Utilizando `sample(_vector_)` podemos obtener los valores aleatorizado del vector en un objeto `_vector_`. Comprueba si se cumple que podemos aleatorizar las muestras de una (o ambas) distribuciones posteriores, y que la probabilidad de que las dos clases sean diferentes aún así no cambie.
 
 ::: {#respuesta-9 .callout-note}
+```{r preg-9}
+
+muestras_aleatorias_1 <- sample(muestras_nuevas_1)  
+muestras_aleatorias_2 <- sample(muestras_nuevas_2)  
+prob_aleatoria_montecarlo <- mean(muestras_aleatorias_2 > muestras_aleatorias_1)
+delta_mu_2 <- mean(muestras_aleatorias_2) - mean(muestras_aleatorias_1)
+suma_var_2 <- var(muestras_aleatorias_1) + var(muestras_aleatorias_2) 
+prob_aleatoria_analitica <- 1 - pnorm(0, mean = delta_mu_2, sd = sqrt(suma_var_2))
+
+cat("Probabilidad Monte Carlo después de aleatorizar las muestras:", round(prob_aleatoria_montecarlo, 3), "\n")
+cat("Probabilidad analítica después de aleatorizar las muestras:", round(prob_aleatoria_analitica, 3), "\n")
+
+```
+
 :::
 
 ## Estimador máximo posterior
@@ -243,6 +453,37 @@ El estimador MAP es `{r} moda`, siendo su densidad `{r} densidad_max`.
 -   Utilizando las muestras posteriores obtenidas en la pregunta 5, calcula los estimadores MAP para las dos clases, y compáralos con los que obtendrías con las fómulas analíticas.
 
 ::: {#respuesta-10 .callout-note}
+```{r preg-10}
+densidad_clase_1 <- density(muestras_nuevas_1) 
+densidad_clase_1_tbl <- tibble(
+  x = densidad_clase_1$x,         
+  densidad = densidad_clase_1$y 
+)
+estimador_map_clase_1 <- densidad_clase_1_tbl |> slice(which.max(densidad))  
+moda_clase_1 <- estimador_map_clase_1 |> pull(x)  
+
+densidad_clase_2 <- density(muestras_nuevas_2)
+densidad_clase_2_tbl <- tibble(
+  x = densidad_clase_2$x,
+  densidad = densidad_clase_2$y
+)
+estimador_map_clase_2 <- densidad_clase_2_tbl |> slice(which.max(densidad))
+moda_clase_2 <- estimador_map_clase_2 |> pull(x)
+
+map_analitico_clase_1 <- mean(muestras_nuevas_1)   
+map_analitico_clase_2 <- mean(muestras_nuevas_2)
+
+# Mostrar resultados
+cat("Clase 1:\n")
+cat("MAP (suavizado de kernel):", moda_clase_1, "\n")
+cat("MAP (analítico):", map_analitico_clase_1, "\n\n")
+
+cat("Clase 2:\n")
+cat("MAP (suavizado de kernel):", moda_clase_2, "\n")
+cat("MAP (analítico):", map_analitico_clase_2, "\n\n")
+
+```
+Con ambos metodos se obtienen valores muy similares, iguales en el caso de la clase 1 y con una minima diferencia en el caso de la clase 2
 :::
 
 # Ejercicio 2: Distribuciones Gamma
@@ -267,6 +508,28 @@ La distribución Gamma está implementada en R mediante la familia de funciones 
 -   Utilizando un eje horizontal con precisión de .002, representa las dos distribuciones. Determina los límites del eje horizontal según tu propio criterio. Sin ver la forma de la función de densidad, ¿podrías deducir cuál habría de ser alguno de los dos límites del intervalo?
 
 ::: {#respuesta-11 .callout-note}
+```{r preg-11}
+x <- seq(0, 3, by = 0.002)
+
+densidad_sin <- dgamma(x, shape = 219, rate = 112)
+densidad_con <- dgamma(x, shape = 68, rate = 45)
+
+
+library(ggplot2)
+tibble(x, densidad_sin, densidad_con) |>
+  ggplot(aes(x)) +
+  geom_line(aes(y = densidad_sin, color = "Sin título universitario")) +
+  geom_line(aes(y = densidad_con, color = "Con título universitario")) +
+  labs(
+    title = "Distribuciones Posteriores de Tasas de Fertilidad",
+    x = "Tasa de Fertilidad",
+    y = "Densidad",
+    color = "Grupos"
+  ) +
+  theme_minimal()
+
+```
+El limite izquierdo logico podria ser 0, ya que las distribuciones gamma son siempre positivas, tambien podemos tener en cuenta la media y desviacion estandar, la mas alta siendo la de mujeres sin titulo media=1,96 y sd= 0.13, por lo que los limites podrian ser 1,5 y 3,5 ya que estan alejados varias desviaciones de la media 
 :::
 
 ### Pregunta 12
@@ -274,6 +537,50 @@ La distribución Gamma está implementada en R mediante la familia de funciones 
 -   Determina la probabilidad de que las mujeres de 40 años sin título universitario en los 90 en EEUU tuvieran una tasa de fertilidad superior a la de las mujeres con título universitario. Utiliza el método de Monte Carlo con 3 decimales de precisión al 99% de confianza, justificando el tamaño muestral elegido para aproximar las distribuciones posteriores (usa la media para justificar esta precisión). Si lo necesitas, revisa el material complementario del Tema 3 para determinar la varianza de la distribución Gamma.
 
 ::: {#respuesta-12 .callout-note}
+
+```{r preg-12-1}
+
+a_sin <- 219
+b_sin <- 112
+a_con <- 68
+b_con <- 45
+
+media_sin <- a_sin / b_sin
+var_sin   <- a_sin / b_sin^2
+
+media_con <- a_con / b_con
+var_con   <- a_con / b_con^2
+
+var_max <- max(var_sin, var_con)
+mcse_objetivo <- 0.0005
+
+S_requerido <- ceiling(var_max / mcse_objetivo^2)
+cat("Tamaño muestral necesario:", S_requerido, "\n")
+
+
+```
+Utilizando la siguiente formula despeje la S para poder hacer los calculos
+
+$$ \text{SEM} = \frac{\sigma}{\sqrt{S}} $$ 
+```{r preg-12-2}
+theta_sin <- rgamma(S_requerido, shape = a_sin, rate = b_sin)
+theta_con <- rgamma(S_requerido, shape = a_con, rate = b_con)
+
+prob_sin_mayor_con <- mean(theta_sin > theta_con)
+
+mcse_final <- sqrt(var(theta_sin > theta_con) / S_requerido)
+
+z_99 <- 2.58
+ic_99 <- c(
+  prob_sin_mayor_con - z_99 * mcse_final,
+  prob_sin_mayor_con + z_99 * mcse_final
+)
+
+cat("Probabilidad estimada:", round(prob_sin_mayor_con, 3), "\n")
+cat("MCSE:", round(mcse_final, 5), "\n")
+cat("IC 99%:", round(ic_99[1], 3), "a", round(ic_99[2], 3), "\n")
+```
+
 :::
 
 # Referencias

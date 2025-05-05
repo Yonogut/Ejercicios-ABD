@@ -162,19 +162,17 @@ ggplot(df_theta, aes(x = theta)) +
 
 ::: {#respuesta-2 .callout-note}
 ```{r preg-2}
-resultados_binomiales <- rbinom(length(theta_sim), size = n_muestra_1, prob = theta_sim)
-# Crear un data frame para análisis y representación gráfica
 library(tibble)
 library(ggplot2)
+resultados_binomiales <- rbinom(length(theta_sim), size = n_muestra_1, prob = theta_sim)
 
 df_resultados <- tibble(aceptaciones = resultados_binomiales)
 
-# Gráfica de la distribución predictiva previa
 ggplot(df_resultados, aes(x = aceptaciones)) +
-  geom_bar(fill = "skyblue", alpha = 0.7) +
+  geom_bar(aes(y = after_stat(count / sum(count))), fill = "skyblue", alpha = 0.7) +
   labs(title = "Distribución predictiva previa de aceptaciones (Muestra 1)",
        x = "Número de aceptaciones",
-       y = "Frecuencia") +
+       y = "Proporción") +
   theme_minimal()
 
 ```
@@ -191,11 +189,11 @@ aceptaciones_empiricas <- aceptacion_muestra_1 %>%
   filter(resp_descarga_app == "Si") %>%
   nrow()
 # Calcular el centil
-prob_menor_igual <- mean(resultados_binomiales <= aceptaciones_empiricas)
+prob_menor <- mean(resultados_binomiales < aceptaciones_empiricas)
 prob_mayor_igual <- mean(resultados_binomiales >= aceptaciones_empiricas)
 
 # Mostrar resultados usando cat()
-cat("Centil de la muestra empírica: ", prob_menor_igual * 100, "%\n")
+cat("Centil de la muestra empírica: ", prob_menor * 100, "%\n")
 cat("Probabilidad de obtener un valor igual o mayor que la muestra empírica: ", prob_mayor_igual, "\n")
 cat("Probabilidad de obtener un valor igual o menor que la muestra empírica: ", prob_menor_igual, "\n")
 
@@ -314,11 +312,12 @@ resultados_binomiales_post_2 <- rbinom(n_sim, size = n_muestra_2, prob = theta_p
 df_resultados_post_2 <- tibble(aceptaciones = resultados_binomiales_post_2)
 
 # Representar la distribución predictiva posterior
+
 ggplot(df_resultados_post_2, aes(x = aceptaciones)) +
-  geom_bar(fill = "orange", alpha = 0.7) +
+  geom_bar(aes(y = after_stat(count / sum(count))), fill = "orange", alpha = 0.7) +
   labs(title = "Distribución predictiva posterior de aceptaciones (Muestra 2)",
        x = "Número de aceptaciones",
-       y = "Frecuencia") +
+       y = "Proporción") +
   theme_minimal()
 
 # Mostrar un pequeño resumen
@@ -342,45 +341,47 @@ cat("Varianza de aceptaciones simuladas:", var(resultados_binomiales_post_2), "\
 ```{r preg-7}
 library(ggplot2)
 library(tibble)
-
-# --- Simulación de la distribución predictiva posterior para n_muestra_1 con la muestra 2 ---
+library(dplyr)
 
 resultados_binomiales_post_muestra_2_n1 <- rbinom(n_sim, size = n_muestra_1, prob = theta_post_sim_2)
 
-# Crear data frame para la distribución predictiva posterior ajustada a muestra 2
+# Crear data frames para ambas distribuciones
+df_resultados_post_muestra_1 <- tibble(aceptaciones = resultados_binomiales_post)
 df_resultados_post_muestra_2_n1 <- tibble(aceptaciones = resultados_binomiales_post_muestra_2_n1)
 
-# Representar la distribución predictiva posterior ajustada a muestra 2
-plot_predictiva <- ggplot(df_resultados_post_muestra_2_n1, aes(x = aceptaciones)) +
-  geom_bar(fill = "blue", alpha = 0.5) +
-  labs(title = "Distribución predictiva posterior ajustada a muestra 2",
-       x = "Número de aceptaciones",
-       y = "Frecuencia") +
+# Calcular proporciones para graficar
+df_plot_1 <- df_resultados_post_muestra_1 |>
+  count(aceptaciones) |>
+  mutate(prop = n / sum(n), grupo = "Posterior Muestra 1")
+
+df_plot_2 <- df_resultados_post_muestra_2_n1 |>
+  count(aceptaciones) |>
+  mutate(prop = n / sum(n), grupo = "Posterior Muestra 2 (n = muestra 1)")
+
+# Unir ambos conjuntos para graficar juntos
+df_plot_total <- bind_rows(df_plot_1, df_plot_2)
+
+# Graficar distribuciones predictivas con línea del valor empírico
+ggplot(df_plot_total, aes(x = aceptaciones, y = prop, fill = grupo)) +
+  geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+  geom_vline(xintercept = aceptaciones_empiricas, color = "red", linetype = "dashed", linewidth = 1) +
+  labs(
+    title = "Comparación de distribuciones predictivas posteriores",
+    subtitle = "Simulaciones con posterior de muestra 1 vs muestra 2 (tamaño n de muestra 1)",
+    x = "Número de aceptaciones",
+    y = "Proporción",
+    fill = "Fuente posterior"
+  ) +
   theme_minimal()
 
-# --- Representar conjuntamente con la distribución predictiva posterior de la muestra 1 ---
-
-df_resultados_post_muestra_1 <- tibble(aceptaciones = resultados_binomiales_post)
-
-# Representar conjuntamente con la distribución predictiva posterior de la muestra 1
-plot_conjunto <- ggplot() +
-  geom_bar(data = df_resultados_post_muestra_1, aes(x = aceptaciones, y = after_stat(count)),
-           fill = "orange", alpha = 0.5, stat = "count") +
-  geom_bar(data = df_resultados_post_muestra_2_n1, aes(x = aceptaciones, y = after_stat(count)),
-           fill = "blue", alpha = 0.5, stat = "count") +
-  geom_vline(xintercept = aceptaciones_empiricas, color = "red", linetype = "dashed") +
-  labs(title = "Comparación de distribuciones predictivas posteriores",
-       x = "Número de aceptaciones",
-       y = "Frecuencia") +
-  theme_minimal()
-
-# Mostrar resultados
-print(plot_conjunto)
-
-cat("Valor obtenido de la muestra empírica 1 (línea roja): ", aceptaciones_empiricas, "\n")
-
+# Explicación textual (opcional)
+cat("La línea roja representa el valor empírico observado en la muestra 1:", aceptaciones_empiricas, "\n")
+cat("Se comparan las distribuciones predictivas posteriores ajustadas con las muestras 1 y 2,\n")
+cat("ambas proyectadas sobre un tamaño muestral igual al de la muestra 1.\n")
 
 ```
+El gráfico en la Pregunta 7 compara dos distribuciones predictivas posteriores del número de aceptaciones, usando distintos datos para simular la probabilidad de éxito (θ). La distribución basada en la muestra 1 se representa en rosado, mientras que la basada en la muestra 2, ajustada al mismo tamaño muestral, se muestra en celeste. La línea roja marca el valor observado en la muestra 1, permitiendo evaluar la coherencia entre los resultados empíricos y las expectativas bajo diferentes hipótesis. Si el valor empírico cae en zonas de alta densidad en ambas distribuciones, indica consistencia entre muestras; si no, puede señalar discrepancias.
+
 
 :::
 
@@ -415,6 +416,8 @@ cat("Valor-p predictivo posterior:", p_valor_predictivo_posterior, "\n")
 
 ```
 Un valor-𝑝 predictivo posterior de 0.121 indica que existe un 12.1% de probabilidad de observar un resultado tan extremo como el de la muestra 1 (o más extremo) bajo el modelo ajustado con la muestra 2. Esto sugiere que no hay evidencia fuerte para rechazar la hipótesis de que la muestra 1 y la muestra 2 provienen de la misma población. Aunque no es extremadamente alto, el valor es lo suficientemente grande para que los datos observados sean compatibles con el modelo ajustado.
+
+Se multiplica por 2 porque queremos medir la diferencia en ambas direcciones. El valor-p predictivo posterior nos dice cuán raro es el resultado observado según la distribución simulada. Primero, calculamos la probabilidad de obtener un valor menor o igual y la de obtener un valor mayor o igual. Luego, tomamos la más baja de estas dos porque nos interesa la parte más extrema del resultado. Multiplicarlo por 2 nos permite considerar ambos extremos de la distribución, asegurándonos de que estamos evaluando cualquier desviación del resultado esperado, sin importar si es mayor o menor.
 :::
 
 ### Pregunta 10
@@ -564,22 +567,29 @@ y_pred_sin <- rpois(length(lambda_sin), lambda_sin)
 # Para el grupo "con título universitario"
 y_pred_con <- rpois(length(lambda_con), lambda_con)
 
-# Crear un data frame combinando ambos
+# Crear data frame con etiquetas
 df_pred <- tibble(
   n_hijos = c(y_pred_sin, y_pred_con),
   grupo   = rep(c("Sin título universitario", "Con título universitario"), each = length(lambda_sin))
 )
 
-# Representar gráficamente las distribuciones predictivas posteriores
-ggplot(df_pred, aes(x = n_hijos, fill = grupo)) +
-  geom_bar(position = "dodge", alpha = 0.7) +
+# Calcular proporciones
+df_plot_pred <- df_pred |>
+  count(grupo, n_hijos) |>
+  group_by(grupo) |>
+  mutate(prop = n / sum(n))
+
+# Gráfico con proporciones
+ggplot(df_plot_pred, aes(x = n_hijos, y = prop, fill = grupo)) +
+  geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
   labs(
     title = "Distribuciones predictivas posteriores: número de hijos por grupo",
     x = "Número de hijos (simulado)",
-    y = "Frecuencia",
+    y = "Proporción",
     fill = "Grupo"
   ) +
   theme_minimal()
+
 
 ```
 
@@ -606,27 +616,27 @@ prob_4_mas_con <- mean(y_pred_con >= 4)
 cat("Probabilidad de tener 4 hijos o más (Sin título universitario):", prob_4_mas_sin, "\n")
 cat("Probabilidad de tener 4 hijos o más (Con título universitario):", prob_4_mas_con, "\n")
 
+# --- Suponemos proporciones iguales ---
+p_sin <- 0.5
+p_con <- 0.5
+
 # --- Probabilidad total de tener 4 hijos o más ---
-p_sin <- length(y_pred_sin) / (length(y_pred_sin) + length(y_pred_con))
-p_con <- 1 - p_sin
 prob_4_mas_total <- prob_4_mas_sin * p_sin + prob_4_mas_con * p_con
 
 # --- Aplicar la regla de Bayes ---
 prob_sin_dado_4_mas <- (prob_4_mas_sin * p_sin) / prob_4_mas_total
 prob_con_dado_4_mas <- (prob_4_mas_con * p_con) / prob_4_mas_total
 
-# Mostrar resultados
-cat("Probabilidad de que una mujer con 4 hijos o más NO tenga título universitario:", prob_sin_dado_4_mas, "\n")
-cat("Probabilidad de que una mujer con 4 hijos o más SÍ tenga título universitario:", prob_con_dado_4_mas, "\n")
-
 # --- Cálculo del "Odds" ---
 odds_sin_titulo <- prob_sin_dado_4_mas / prob_con_dado_4_mas
 
-# Mostrar el "odds"
+# --- Resultados finales ---
+cat("Probabilidad de que una mujer con 4 hijos o más NO tenga título universitario:", prob_sin_dado_4_mas, "\n")
+cat("Probabilidad de que una mujer con 4 hijos o más SÍ tenga título universitario:", prob_con_dado_4_mas, "\n")
 cat("Odds de que una mujer con 4 hijos o más NO sea titulada universitaria:", odds_sin_titulo, "\n")
 
 ```
-
+La correccion que he hecho ha sido suponer proporciones iguales para qu no se basen en la cantidad de simulaciones
 :::
 
 ### Pregunta 14
@@ -659,30 +669,8 @@ cat("P(empate): ", round(prob_empate, 3), "\n")
 -   A partir de estas aproximaciones a las distribuciones predictivas posteriores, ¿podrías obtener la probabilidad conjunta de que una mujer no tenga ningún hijo y sea o no titulada universitaria? Justifica tu respuesta.
 
 ::: {#respuesta-15 .callout-note}
-```{r preg-15}
-# Extraer el número de mujeres en cada grupo desde los datos originales
-n_sin <- fert_estadisticos |> filter(titulo_uni == "sin") |> pull(n)
-n_con <- fert_estadisticos |> filter(titulo_uni == "con") |> pull(n)
-# Estimar P(y = 0 | grupo)
-p_y0_sin <- mean(y_pred_sin == 0)
-p_y0_con <- mean(y_pred_con == 0)
 
-# Proporciones muestrales
-p_sin <- n_sin / (n_sin + n_con)
-p_con <- n_con / (n_sin + n_con)
-
-# Probabilidades conjuntas
-p_joint_sin <- p_y0_sin * p_sin
-p_joint_con <- p_y0_con * p_con
-
-# Mostrar resultados
-cat("P(y = 0, sin título): ", round(p_joint_sin, 3), "\n")
-cat("P(y = 0, con título): ", round(p_joint_con, 3), "\n")
-
-```
-Sí, podemos obtener estas probabilidades conjuntas gracias a que:
-Las distribuciones predictivas posteriores nos permiten estimar 
-𝑃(𝑦=0 ∣ grupo),y las proporciones en la muestra nos sirven para aproximar 𝑃(grupo).
+Sí, se puede obtener la probabilidad conjunta porque contamos con dos elementos clave: la probabilidad condicional de que una mujer no tenga hijos dado su grupo (titulado o no) y la proporción supuesta de cada grupo en la población. Aplicando la regla de la probabilidad conjunta, multiplicamos la probabilidad de no tener hijos dentro de cada grupo por la proporción del grupo en la muestra, lo que nos da la estimación de la probabilidad conjunta. Es decir, estamos combinando la información de las distribuciones predictivas posteriores con el peso relativo de cada grupo en la población, lo que nos permite obtener una aproximación válida.
 :::
 
 ## Comprobaciones predictivas posteriores
@@ -699,19 +687,44 @@ df_pred <- tibble(
   grupo = rep(c("Sin título universitario", "Con título universitario"), times = c(length(y_pred_sin), length(y_pred_con)))
 )
 
-# Ahora realiza el cálculo de proporciones correctamente
-df_prop_tituladas <- df_pred %>%
-  group_by(n_hijos) %>%
-  summarize(prop_tituladas = mean(grupo == "Con título universitario"))
-
-# Representar la proporción de mujeres tituladas por número de hijos
-ggplot(df_prop_tituladas, aes(x = n_hijos, y = prop_tituladas)) +
-  geom_line(color = "blue", size = 1) +
-  geom_point(color = "red", size = 2) +
+# Graficar la distribución predictiva posterior por grupo
+ggplot(df_pred, aes(x = n_hijos, fill = grupo)) +
+  geom_histogram(binwidth = 1, position = "dodge", alpha = 0.7) +
   labs(
-    title = "Proporción de mujeres tituladas universitarias según el número de hijos",
+    title = "Distribución predictiva posterior del número de hijos",
     x = "Número de hijos",
-    y = "Proporción de tituladas"
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+
+```
+La gráfica muestra la distribución predictiva posterior del número de hijos en dos grupos: mujeres con título universitario y sin título universitario. En el eje X se representa el número de hijos, mientras que en el eje Y se muestra la frecuencia. Las personas sin título universitario tienden a tener más hijos en comparación con quienes sí tienen título, destacándose especialmente en los valores bajos de hijos.
+
+```{r}
+library(tibble)
+library(dplyr)
+library(ggplot2)
+
+# Crear data frame combinado con indicador de grupo
+df_pred <- tibble(
+  n_hijos = c(y_pred_sin, y_pred_con),
+  tit_universitario = rep(c("No", "Sí"), times = c(length(y_pred_sin), length(y_pred_con)))
+)
+
+# Calcular proporción de tituladas por número de hijos
+df_prop <- df_pred |>
+  count(n_hijos, tit_universitario) |>
+  group_by(n_hijos) |>
+  mutate(proporcion = n / sum(n)) |>
+  filter(tit_universitario == "Sí")
+
+# Graficar proporción de mujeres con título universitario según número de hijos
+ggplot(df_prop, aes(x = n_hijos, y = proporcion)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "Proporción de mujeres con título universitario según número de hijos",
+    x = "Número de hijos",
+    y = "Proporción con título universitario"
   ) +
   theme_minimal()
 

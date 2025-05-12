@@ -244,7 +244,7 @@ comparacion_plot <- ggplot() +
 comparacion_plot
 
 ```
-El gráfico compara la densidad estimada de𝜃obtenida con el muestreador de Gibbs (línea roja) con la aproximación discreta teórica (línea azul punteada). Se observa que ambas curvas presentan picos en los mismos puntos, indicando que la cadena de Markov ha capturado correctamente la estructura de la distribución. La estimación de Gibbs es más suave, mientras que la aproximación discreta presenta oscilaciones mas pronunciadas.
+Aunque los picos coinciden en el eje X, siendo aproximadamente -3,0 y 3, uno de ellos no coincide en lo referente a la densidad, lo que quiere decir que la aproximacion discreta asigna mas probabilidad en ese valor que el metodo de Gibbs.
 :::
 
 ## Diagnósticos
@@ -260,17 +260,18 @@ El gráfico compara la densidad estimada de𝜃obtenida con el muestreador de Gi
 # Cargar el paquete coda
 library(coda)
 
-# Convertir la cadena de Gibbs en un objeto mcmc
+# Convertir la cadena de Gibbs en objeto mcmc
 cadena_mcmc <- as.mcmc(cadena_Gibbs$theta)
 
-# Representar la autocorrelación
-autocorr.plot(cadena_mcmc)
+# Representar la autocorrelación serial con base R
+acf(cadena_Gibbs$theta, main = "Autocorrelación de θ (Gibbs)")
 
 # Calcular el tamaño muestral efectivo
 effectiveSize(cadena_mcmc)
 
-```
 
+```
+Como los valores en el eje y (ACF) decrecen lentamente, podriamos decir que los valores dependenden bastante de iteraciones anteriores.tambien el tamaño muestral efectivo indicaria que las muestras estan muy correlacionadas
 :::
 
 ### Pregunta 7
@@ -343,7 +344,7 @@ theta_mcmc_list <- mcmc.list(theta_Gibbs)
 gelman.diag(theta_mcmc_list)
 
 ```
-
+Tanto el point est. como el upper C.I. indican, por ser elevados, que las cadenas no han llegado a valores estables.
 :::
 
 ### Pregunta 9
@@ -422,7 +423,7 @@ print(gelman_rubin_diag_long)
 
 
 ```
-
+Las distribuciones estimadas coinciden mejor, el tamaño muestral efectivo es mayor, por lo que las muestas son mas independientes, ademas los valores de point est. y upper c.i. son cercanos a 1 por lo que el modelo parece haber llegado a valores estables y confiables.
 :::
 
 ### Pregunta 10
@@ -430,7 +431,7 @@ print(gelman_rubin_diag_long)
 -   La pregunta 8 demuestra el uso del estadístico de convergencia de Gelman-Rubin para cadenas de Markov, pero hace una serie de supuestos que no siempre se cumplen. En base a la ayuda de `gelman.diag()`, ¿cómo interpretarías los resultados del estadístico $R$ obtenidos en estos casos? ¿Qué crees que ocurriría si lo calculamos con dos (o más) cadenas que convergen "parcialmente" a uno de los modos de la distribución únicamente?
 
 ::: {#respuesta-10 .callout-note}
-El estadístico de Gelman-Rubin evalúa la convergencia de múltiples cadenas de Markov comparando la variabilidad dentro de cada cadena con la variabilidad entre cadenas. Un valor cercano a 1 indica buena convergencia, mientras que valores significativamente mayores a 1.1 sugieren que las cadenas no han explorado completamente el espacio paramétrico. Si lo calculamos con cadenas que convergen solo a un modo de la distribución, podríamos obtener valores altos, indicando que las cadenas no han mezclado bien y que aún no han alcanzado la distribución estacionaria completa. En estos casos, sería necesario aumentar el número de iteraciones o mejorar la inicialización para garantizar una exploración adecuada de todos los modos posibles.
+Para considerar el valor de R confiable las cadenas deberian pasar por las mismas portes de la distribucion, si convergen parcialmente podemos obtener valores cercanos a 1 pero serian engañosos, indicandonos que hay convergencia cuando no es asi.
 
 :::
 
@@ -494,6 +495,15 @@ Asegúrate de familiarizarte con el ejemplo, ya que lo utilizaremos en este ejer
 -   Carga el dataset `logit` del paquete `{mcmc}`, explóralo, y explica su contenido.
 
 *(NOTA: No olvides añadir el paquete `{mcmc}` al entorno.)*
+```{r}
+renv::snapshot(force = TRUE)
+
+```
+```{r 2}
+renv::status()
+
+```
+
 
 ::: {#respuesta-12 .callout-note}
 ```{r preg-12}
@@ -524,7 +534,12 @@ out <- glm(y ~ x1 + x2 + x3 + x4, data = logit,
 family = binomial(), x = TRUE)
 summary(out)
 ```
-El modelo de regresión logística ajustado con glm() muestra la relación entre la variable binaria y y los predictores x1, x2, x3, y x4. Los coeficientes estimados indican cómo cada predictor influye en la probabilidad de y = 1. x1 y x2 tienen efectos significativos (p < 0.05), especialmente x2 (p = 0.0021), lo que sugiere una fuerte asociación con la variable respuesta. x3 y x4 no alcanzan el nivel de significancia estándar, aunque x4 muestra cierta tendencia (p = 0.0817). La reducción de la deviacion residual frente a la deviacion nula sugiere que el modelo explica parte de la variabilidad en los datos, con un AIC de 97.67, lo que permite compararlo con otros modelos. 
+El modelo de regresión logística con glm() analiza cómo la variable y se relaciona con x1, x2, x3 y x4. Los coeficientes indican cuánto influye cada predictor en la probabilidad de que y = 1.
+
+x1 y x2 son significativos al nivel 0.05, lo que indica una relación clara, especialmente x2 (p = 0.0021). En cambio, x3 y x4 no son significativos porque sus p-valores son mayores a 0.05.
+
+El modelo reduce la desviación residual, lo que indica que explica bien parte de la variabilidad de los datos. Su AIC es 97.67, útil para comparar modelos alternativo
+
 
 :::
 
@@ -580,9 +595,12 @@ Explica también qué significan los valores e la columna `se_mean` y cómo se i
 ```{r preg-15}
 fit_logit_stan
 ```
-El resultado de fit_logit_stan muestra la configuración del muestreo en Stan, donde se han ejecutado cuatro cadenas de Markov con 1000 iteraciones cada una, de las cuales las primeras 500 se utilizaron para el calentamiento (warmup). Luego, se tomaron 500 muestras por cadena para la estimación, sumando un total de 2000 muestras posteriores al calentamiento. Este proceso garantiza que las cadenas exploren bien la distribución posterior, lo que permite obtener estimaciones confiables de los parámetros del modelo de regresión logística Bayesiano.
+El objeto fit_logit_stan muestra que se han hecho 4 simulaciones con 1000 pasos cada una. Los primeros 500 pasos fueron de calentamiento (warmup), y los 500 siguientes se usaron para obtener los resultados, sumando un total de 2000 datos.
 
-La columna se_mean representa el error estándar de la media estimada para cada parámetro y sugiere la estabilidad de la inferencia. Valores bajos de se_mean, como los obtenidos (~0.01), indican que la estimación de los coeficientes es precisa y que el muestreo ha sido eficiente. Además, el estadístico de Gelman-Rubin (Rhat ≈ 1) confirma que las cadenas han convergido bien, validando la calidad de la inferencia obtenida a partir del muestreo MCMC.
+La columna se_mean indica qué tanto puede cambiar la media del parámetro si repitiéramos el muestreo. Si el número es muy pequeño (como 0.01), significa que ya tenemos suficientes datos para hacer una buena estimación.
+
+El valor Rhat cercano a 1 indica que las simulaciones han dado resultados similares, lo que es señal de buen muestreo. Sin embargo, no basta con mirar solo Rhat para garantizar la convergencia.
+
 :::
 
 ### Pregunta 16
@@ -590,7 +608,8 @@ La columna se_mean representa el error estándar de la media estimada para cada 
 -   Explica cómo se diferencian las especificaciones del algoritmo en Stan anterior de las utilizadas por @geyer2011, en cuanto a número de cadenas, iteraciones, "burn-in", "thinning", y valores iniciales de las cadenas.
 
 ::: {#respuesta-16 .callout-note}
-Las especificaciones del algoritmo en Stan difieren de las utilizadas por Geyer (2011) en varios aspectos clave. En Stan, el modelo se ejecuta con 4 cadenas, cada una con 1000 iteraciones, de las cuales 500 son de calentamiento (burn-in), asegurando que las muestras provengan de la distribución estacionaria. Además, no se aplica submuestreo (thinning), lo que significa que cada iteración posterior al calentamiento se almacena. En contraste, Geyer (2011) utiliza un enfoque más flexible, donde el número de iteraciones y el burn-in pueden ajustarse según la convergencia observada, y el thinning se emplea para reducir la autocorrelación en las muestras. También, en Stan, los valores iniciales de las cadenas suelen asignarse automáticamente o definirse explícitamente, mientras que en el enfoque de Geyer, la elección de los valores iniciales puede ser más estratégica para mejorar la exploración del espacio paramétrico.
+En el caso de Geyer, las cadenas de Markov se ejecutan manualmente, eliminando las primeras 100 iteraciones (burn-in) y aplicando thinning para reducir la autocorrelación. En cambio, Stan ejecuta 4 cadenas con 1000 iteraciones, eliminando las primeras 500 como burn-in, sin thinning por defecto, y usa el algoritmo NUTS para optimizar el muestreo automáticamente.
+
 :::
 
 ### Pregunta 17
@@ -598,7 +617,10 @@ Las especificaciones del algoritmo en Stan difieren de las utilizadas por Geyer 
 -   ¿Podrías decir que las muestras del modelo aproximado con Stan representan adecuadamente la distribución posterior de los parámetros del modelo? ¿En qué te basas para afirmar / refutar que es así?
 
 ::: {#respuesta-17 .callout-note}
-Sí, las muestras obtenidas con Stan representan adecuadamente la distribución posterior de los parámetros del modelo, basándonos en varios indicadores clave. Primero, el estadístico Rhat ≈ 1 en todos los parámetros sugiere que las cadenas han convergido correctamente, lo que significa que el muestreo ha explorado bien el espacio paramétrico. Además, el error estándar de la media (se_mean) es bajo, lo que indica estabilidad en las estimaciones. También, el número efectivo de muestras (n_eff) es alto, lo que confirma que el muestreo ha sido eficiente y que la autocorrelación entre iteraciones es baja.
+Las muestras generadas con Stan parecen representar bien la distribución posterior.Los valores de Rhat son cercanos a 1 para todos los parámetros, lo que sugiere que las cadenas de muestreo han llegado a regiones similares. Aunque esto no garantiza convergencia total, es un buen indicio.
+
+Además, un se_mean bajo sugiere que la media calculada es estable y confiable. El número efectivo de muestras (n_eff) es alto, lo que significa que, a pesar de la autocorrelación, hay suficientes datos útiles. Para verificar completamente la calidad del muestreo, sería recomendable revisar también las trazas de las cadenas y la forma de las distribuciones posteriores.
+
 :::
 
 ## Interpretación del modelo
@@ -623,9 +645,7 @@ Los valores de los coeficientes en Stan (alpha para el intercepto y beta[1] a be
 ```{r preg-19}
 plot(fit_logit_stan)
 ```
-La representación que has obtenido muestra las estimaciones de los parámetros del modelo Bayesiano ajustado en Stan, junto con sus intervalos de incertidumbre. En el gráfico aparecen los coeficientes alpha (intercepto) y beta[1] a beta[4] (efectos de los predictores), cada uno con su estimación puntual (marcada con un punto negro) y los intervalos de credibilidad, que reflejan la variabilidad en la inferencia.
-
-Las líneas horizontales rojas representan los intervalos más concentrados (probablemente el 50% o el 80% de la distribución posterior), mientras que las líneas negras más largas indican el rango total de incertidumbre (por ejemplo, el intervalo de credibilidad del 95%). Esto permite visualizar cuánta incertidumbre hay en la estimación de cada parámetro, así como determinar cuáles tienen un efecto más claro en la regresión logística. Si los intervalos de credibilidad incluyen cero, significa que el parámetro podría no ser significativamente diferente de cero, lo que afectaría su interpretación en el modelo.
+Las lineas horizontales serian el intervlo de credibilidad, lo que muestra los rangos mas probables en los que puede estar el verdadero valor de cada parrametro. La linea mas larga (negra) indica el rango donde el parrametro tiene un 95% de posiblidades de encontrarse.
 :::
 
 ### Pregunta 20
@@ -639,9 +659,9 @@ mcmc_trace(as.array(fit_logit_stan), pars = c("alpha", "beta[1]", "beta[2]", "be
 mcmc_areas(as.array(fit_logit_stan), pars = c("alpha", "beta[1]", "beta[2]", "beta[3]", "beta[4]"), prob = 0.95)
 
 ```
-La primera imagen muestra los trazados de las cadenas de Markov, donde cada línea representa la evolución de los parámetros (alpha, beta[1], beta[2], beta[3], beta[4]) a lo largo de las iteraciones del muestreo en Stan. La clave aquí es evaluar la mezcla de las cadenas, es decir, si las líneas están bien entrelazadas y sin tendencias sistemáticas. Si las trazas parecen estables y bien mezcladas, significa que las cadenas han alcanzado la distribución estacionaria y la inferencia es confiable. Si hubiera patrones o una mala mezcla, podríamos necesitar más iteraciones o ajustar los valores iniciales.
+La primera gráfica muestra cómo cambian los valores de cada parámetro en las distintas cadenas a lo largo del muestreo.
 
-La segunda imagen presenta las distribuciones posteriores de los parámetros del modelo. En cada gráfico, la densidad posterior muestra la incertidumbre en la estimación de cada coeficiente, y las áreas sombreadas indican los intervalos de credibilidad, por ejemplo, el 95% de probabilidad de que el parámetro caiga dentro de ese rango. Si los intervalos son estrechos, significa que la estimación es precisa, mientras que intervalos amplios sugieren mayor incertidumbre. Además, si alguna distribución incluye cero, el predictor podría no ser estadísticamente relevante en el modelo.
+La segunda gráfica muestra las distribuciones posteriores de los parámetros con sus intervalos de credibilidad al 95%. Nos permite ver qué tan seguros estamos sobre los valores de los parámetros.
 :::
 
 ## Salidas adicionales en Stan
